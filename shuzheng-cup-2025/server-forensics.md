@@ -10,7 +10,7 @@
 
 This case study documents my training investigation of the 2025 Shuzheng Cup preliminary evidence. I focused on the server-forensics questions: identifying Linux hosts, interpreting system logs, distinguishing Docker and Kubernetes configuration, and connecting a container to its application data. The evidence consisted of an encrypted competition container holding separate forensic images. I imported the images into GoldenEye Evidence Analysis V4, examined Linux artifacts, and used a virtual machine for one runtime check.
 
-This is a practice case study, not an official competition submission. The findings distinguish observations made during the exercise from answers taken from a reference write-up. Q12 includes screenshots of the exported filename and search output.
+This is a practice case study, not an official competition submission. The findings distinguish observations made during the exercise from answers taken from a reference write-up. The screenshots document selected artifacts, search results, and the unsuccessful cluster query.
 
 ## Work log at a glance
 
@@ -31,6 +31,10 @@ This is a practice case study, not an official competition submission. The findi
 
 An E01 file is a forensic image container. The size of the E01 file can be much smaller than the source disk represented by it. A virtualized copy can help inspect a system interactively, but booting it changes its runtime state. In our exercise the simulation software also reset a user password. We therefore treated runtime output as a separate observation and recorded its limitations.
 
+![GoldenEye lists the four server E01 files inside the competition image.](images/server-images.png)
+
+GoldenEye lists the four server E01 files inside the competition image.
+
 ## Q1 — SHA-256 of node1's disk
 
 **Question:** What are the first six hexadecimal characters of the SHA-256 hash of the node1 disk?
@@ -40,6 +44,10 @@ An E01 file is a forensic image container. The size of the E01 file can be much 
 We exported and imported `服务器检材02.E01`. The file `/etc/hostname` contained `node1`, identifying the machine. In GoldenEye, we selected that evidence item, used **Calculate Hash** on the evidence card, and selected SHA-256. The source disk was reported as 40 GB. The resulting source-disk SHA-256 began with `FC9A34`.
 
 SHA-256 operates on the data read from the selected object. Renaming a file while preserving its bytes does not change its hash. When verifying an evidence copy, compare the full digest. The question asks for only the first six characters as an answer.
+
+![The hash task reached 100% for the 40 GB disk. This view shows completion only.](images/q1-hash-task.png)
+
+The hash task reached 100% for the 40 GB disk. This view shows completion only.
 
 ## Q2 — Number of node hosts in the supplied configuration
 
@@ -67,11 +75,19 @@ Select-String -LiteralPath 'C:\path\to\exported\secure' -Pattern 'password chang
 
 This searches the exported file for matching lines. It is a second way to inspect the same log, rather than independent evidence of the event.
 
+![Searching for password initially found an accepted SSH login. The password-change record quoted above was located by searching for chauthtok.](images/q3-login-search.png)
+
+Searching for password initially found an accepted SSH login. The password-change record quoted above was located by searching for chauthtok.
+
 ## Q4 — Docker installation date
 
 **Answer:** `04月08日` (April 8).
 
 The master's `/var/log/yum.log` contained an `Installed` record for `docker-ce` on `Apr 08` at `20:20:58`. A later `Updated` entry is a separate operation. The question asks for the date of installation, so the installation line is the relevant record.
+
+![The package log records docker-ce installation at 20:20:58 on April 8 and an update at 20:24:20.](images/q4-docker-install.png)
+
+The package log records docker-ce installation at 20:20:58 on April 8 and an update at 20:24:20.
 
 ## Q5 — Docker daemon proxy port
 
@@ -93,6 +109,10 @@ The deployment file `/root/mysql-d.yaml` specified MySQL `containerPort: 3306`. 
 
 The attempted `kubectl get svc -A` could not reach the cluster API at the configured address. The reference write-up reports `30627`. Recover the original cluster's service state or another contemporaneous artifact before presenting this number as independently verified; do not infer it from `3306`.
 
+![The service query in the simulated master failed because the API endpoint was unreachable.](images/q6-service-query.png)
+
+The service query in the simulated master failed because the API endpoint was unreachable.
+
 ## Q7 — Image used for the card-selling website
 
 **Answer:** `webdevops/php-nginx`.
@@ -105,6 +125,10 @@ image: webdevops/php-nginx:7.4
 
 The image name is `webdevops/php-nginx` and `7.4` is its tag. The requested answer format calls for the name. Preserve the full image reference in notes when the version matters.
 
+![Line 18 of the PHP deployment manifest identifies the image as webdevops/php-nginx:7.4.](images/q7-deployment-image.png)
+
+Line 18 of the PHP deployment manifest identifies the image as webdevops/php-nginx:7.4.
+
 ## Q8 — Telegram moderation bot container ID
 
 **Answer:** `8fadf5`.
@@ -115,11 +139,19 @@ To investigate the bot's identity, we followed its deployment configuration. The
 
 The container log under `/var/log/containers` was a symbolic link to a pod log. The Docker JSON log under `/var/lib/docker/containers/<container-id>/` was paginated by GoldenEye. Searching the cached chunks for `telegram` did not find a direct match; the bot identity was instead supported by its configuration on image 04.
 
+![The Docker record pairs the container ID beginning 8fadf5 with the captcha-bot workload name.](images/q8-container-details.png)
+
+The Docker record pairs the container ID beginning 8fadf5 with the captcha-bot workload name.
+
 ## Q11 — Telegram API proxy domain
 
 **Answer:** `kk.xilika.cc`.
 
 In server image 04, inspect `/data/k8s_data/default/captchaBot/config/config.toml`. The `api_proxy` field in the Telegram section contained an HTTP URL whose hostname is `kk.xilika.cc`. The answer asks for the domain, so omit the URL scheme. The same file contains a bot token; redact it when sharing screenshots or notes.
+
+![The captchaBot directory contains a config folder and a separate zero-byte config.toml. The proxy setting was found in the file inside the config folder.](images/q11-config-location.png)
+
+The captchaBot directory contains a config folder and a separate zero-byte config.toml. The proxy setting was found in the file inside the config folder.
 
 ## Q12 — Which Telegram group did the verification bot serve?
 
