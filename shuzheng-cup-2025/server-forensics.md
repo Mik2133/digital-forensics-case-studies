@@ -5,12 +5,12 @@
 | **Event** | 2025 Shuzheng Cup preliminary (practice) |
 | **Category** | Digital forensics — Linux servers, Docker, Kubernetes |
 | **Tools** | GoldenEye Evidence Analysis V4, GoldenEye Simulation Forensics V4, VMware Workstation, PowerShell |
-| **Scope** | Selected server-forensics questions (Q1–Q8 and Q11) |
+| **Scope** | Selected server-forensics questions (Q1–Q8 and Q11–Q12) |
 | **Status** | Partial case study; Q6 uses an unverified reference answer |
 
 This case study documents my training investigation of the 2025 Shuzheng Cup preliminary evidence. I focused on the server-forensics questions: identifying Linux hosts, interpreting system logs, distinguishing Docker and Kubernetes configuration, and connecting a container to its application data. The evidence consisted of an encrypted competition container holding separate forensic images. I imported the images into GoldenEye Evidence Analysis V4, examined Linux artifacts, and used a virtual machine for one runtime check.
 
-This is a practice case study, not an official competition submission. The findings distinguish observations made during the exercise from answers taken from a reference write-up. Screenshots, raw evidence, and credentials are omitted.
+This is a practice case study, not an official competition submission. The findings distinguish observations made during the exercise from answers taken from a reference write-up. Q12 includes screenshots of the exported filename and search output.
 
 ## Work log at a glance
 
@@ -120,6 +120,26 @@ The container log under `/var/log/containers` was a symbolic link to a pod log. 
 **Answer:** `kk.xilika.cc`.
 
 In server image 04, inspect `/data/k8s_data/default/captchaBot/config/config.toml`. The `api_proxy` field in the Telegram section contained an HTTP URL whose hostname is `kk.xilika.cc`. The answer asks for the domain, so omit the URL scheme. The same file contains a bot token; redact it when sharing screenshots or notes.
+
+## Q12 — Which Telegram group did the verification bot serve?
+
+**Recovered group name:** 西门庆交流群
+
+On server image 04, I followed the MySQL data directory to `/data/k8s_data/default/mysql80/captchabot/user_captcha_record.ibd` and exported the table file. The database viewer listed a `telegram_chat_name` column, but its cells displayed `<BLOB>` and the detail view opened blank.
+
+![Exported MySQL table file in File Explorer](images/q12-export.png)
+
+I opened PowerShell in the export folder. To look for a group name without knowing it in advance, I searched for one to twenty Chinese characters followed by 群 (“group”). I decoded the exported bytes as UTF-8 and grouped identical matches.
+
+```powershell
+$bytes = [IO.File]::ReadAllBytes("$PWD\user_captcha_record.ibd")
+$text = [Text.Encoding]::UTF8.GetString($bytes)
+[regex]::Matches($text, '[\u4e00-\u9fff]{1,20}群') | ForEach-Object Value | Group-Object | Select-Object Count, Name
+```
+
+![PowerShell reports 8,083 matches for 西门庆交流群](images/q12-powershell.png)
+
+The search returned one distinct name, 西门庆交流群, with 8,083 matches in the exported file. The count measures occurrences of the string. Determining the number of members or verification events would require examining individual database records.
 
 ## Dead ends and corrections
 

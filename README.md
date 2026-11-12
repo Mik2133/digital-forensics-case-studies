@@ -15,6 +15,6 @@ English case studies from my digital-forensics practice with competition evidenc
 3. Separate original evidence from changes introduced by booting a forensic copy.
 4. Mark answers that come from a reference write-up until they can be independently reproduced.
 
-This repository contains written analysis only. It does not publish disk images, credentials, or raw application configuration.
+This repository contains written analysis and selected screenshots. It does not publish disk images, credentials, or raw application configuration.
 
 For challenge-based CTF write-ups, see my [CTF writeups](https://github.com/Mik2133/ctf-writeups).
