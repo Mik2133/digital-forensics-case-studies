@@ -6,6 +6,7 @@ English case studies from my digital-forensics practice with competition evidenc
 
 | Event | Focus | Status |
 |---|---|---|
+| [2026 Digital Forensics Cup preliminary](forensics-cup-2026/README.md) | Mobile backups, computer artifacts, program analysis, and server forensics | 26 answers verified during the competition, one provisional, four open |
 | [2025 Shuzheng Cup preliminary](shuzheng-cup-2025/README.md) | Linux logs, disk hashes, Docker, Kubernetes, and application configuration | Selected server-forensics questions documented; one reference answer remains unverified |
 
 ## Method
